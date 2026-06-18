@@ -1,0 +1,2442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0A1F44">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="深江科创广场">
+<link rel="apple-touch-icon" href="images/logo.png">
+<title>深江·科创广场</title>
+<style>
+/* ============================================================
+   CSS Variables & Reset
+   ============================================================ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --navy-900: #0A1F44;
+  --navy-700: #142B6F;
+  --navy-500: #1E3A8A;
+  --navy-50: #EEF2F9;
+  --gold: #D4A24C;
+  --gold-lt: #E8C97A;
+  --orange: #FF6B35;
+  --green: #10B981;
+  --text-1: #1A1A2E;
+  --text-2: #4A4A5E;
+  --text-3: #8E8E9A;
+  --text-on-dark: #FFFFFF;
+  --bg: #FFFFFF;
+  --bg-soft: #F7F8FB;
+  --bg-card: #FFFFFF;
+  --line: #E8ECF2;
+  --radius: 14px;
+  --radius-lg: 18px;
+  --shadow-sm: 0 2px 8px rgba(10,31,68,.04);
+  --shadow-md: 0 8px 24px rgba(10,31,68,.08);
+  --status-h: 44px;
+  --header-h: 48px;
+  --nav-h: 62px;
+}
+html, body {
+  width: 100%; height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #0A0A0F;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-1);
+  font-size: 15px;
+  overflow: hidden;
+}
+button { border: none; background: none; font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+a { color: inherit; text-decoration: none; }
+
+.stage {
+  width: 100%;
+  max-width: 440px;
+  height: 100vh;
+  max-height: 920px;
+  position: relative;
+  background: var(--bg);
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0,0,0,.4), 0 0 0 10px #1c1c1e, 0 0 0 11px #3a3a3c;
+  border-radius: 0;
+}
+@media (max-width: 480px) {
+  body { background: var(--bg); }
+  .stage { max-width: 100%; max-height: 100%; box-shadow: none; }
+}
+
+/* ============================================================
+   iOS-style Status Bar
+   ============================================================ */
+.status-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: var(--status-h);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-on-dark);
+  background: transparent;
+  z-index: 60;
+  letter-spacing: -.2px;
+}
+.status-bar.dark { color: var(--text-1); }
+.status-bar .right { display: flex; align-items: center; gap: 6px; }
+
+/* ============================================================
+   App Header
+   ============================================================ */
+.app-header {
+  position: absolute;
+  top: var(--status-h);
+  left: 0; right: 0;
+  height: var(--header-h);
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(10,31,68,0);
+  z-index: 50;
+  transition: background .3s ease, backdrop-filter .3s ease, opacity .3s ease, visibility .3s ease;
+}
+.app-header.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+.app-header.solid {
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid rgba(10,31,68,.06);
+}
+.app-header.solid .brand-name,
+.app-header.solid .icon-btn { color: var(--navy-900); }
+.app-header.solid .brand-en { color: var(--text-3); }
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-on-dark);
+}
+.brand-mark {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(255,107,53,.35);
+  object-fit: contain;
+}
+.brand-name { font-weight: 700; font-size: 16px; letter-spacing: -.2px; line-height: 1.1; }
+.brand-en   { font-size: 10px; letter-spacing: 2px; color: rgba(255,255,255,.7); font-weight: 500; margin-top: 1px; }
+
+.icon-btn {
+  width: 38px; height: 38px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-on-dark);
+  background: rgba(255,255,255,.15);
+  backdrop-filter: blur(10px);
+  transition: background .2s ease;
+}
+.app-header.solid .icon-btn { background: transparent; }
+.icon-btn:active { transform: scale(.94); }
+
+/* ============================================================
+   Pages container & page transitions
+   ============================================================ */
+.pages {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.page {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  background: var(--bg);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(20px);
+  transition: opacity .35s ease, transform .35s ease, visibility 0s linear .35s;
+  scrollbar-width: none;
+}
+.page::-webkit-scrollbar { display: none; }
+.page.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+  transition: opacity .35s ease, transform .35s ease;
+}
+
+/* Investment page: override white .page bg with deep navy */
+#page-investment { background: #0D1B3C; }
+.page.exit-left {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+/* ============================================================
+   Bottom Tab Bar
+   ============================================================ */
+.bottom-nav {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: rgba(255,255,255,0.94);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-top: 1px solid rgba(10,31,68,.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: 50;
+}
+.tab {
+  flex: 1;
+  height: var(--nav-h);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: var(--text-3);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .3px;
+  position: relative;
+  transition: color .2s ease;
+}
+.tab svg { width: 24px; height: 24px; }
+.tab.active { color: var(--navy-700); }
+.tab.active::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  width: 24px; height: 3px;
+  background: var(--navy-700);
+  border-radius: 2px;
+}
+.tab:active { transform: scale(.94); }
+
+/* ============================================================
+   HOME PAGE
+   ============================================================ */
+.hero {
+  position: relative;
+  height: 560px;
+  background:
+    linear-gradient(180deg, rgba(10,31,68,.0) 0%, rgba(10,31,68,.3) 50%, rgba(10,31,68,.85) 88%, var(--navy-900) 100%),
+    url('images/new/hero-bg.jpg') center/cover no-repeat;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 24px 40px;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 70% 30%, rgba(212,162,76,.25) 0%, transparent 50%),
+    radial-gradient(circle at 20% 80%, rgba(10,168,168,.18) 0%, transparent 50%);
+  pointer-events: none;
+}
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: rgba(255,255,255,.16);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #fff;
+  width: fit-content;
+  margin-bottom: 16px;
+}
+.hero-eyebrow .dot {
+  width: 6px; height: 6px;
+  background: var(--gold-lt);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--gold-lt);
+}
+.hero-title {
+  font-size: 38px;
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin-bottom: 14px;
+  text-shadow: 0 2px 20px rgba(0,0,0,.3);
+}
+.hero-title .accent { color: var(--gold-lt); }
+.hero-sub {
+  font-size: 15px;
+  line-height: 1.6;
+  color: rgba(255,255,255,.92);
+  margin-bottom: 8px;
+  max-width: 320px;
+}
+.hero-en {
+  font-size: 11px;
+  letter-spacing: 3px;
+  font-weight: 600;
+  color: var(--gold-lt);
+  margin-bottom: 24px;
+  text-transform: uppercase;
+}
+.hero-cta {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+.btn-primary, .btn-secondary {
+  padding: 14px 22px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--orange) 0%, var(--gold) 100%);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(255,107,53,.4);
+}
+.btn-primary:active { transform: scale(.96); }
+.btn-secondary {
+  background: rgba(255,255,255,.18);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.3);
+  backdrop-filter: blur(10px);
+}
+.btn-secondary:active { transform: scale(.96); }
+
+.announce {
+  background: var(--navy-900);
+  color: #fff;
+  padding: 12px 20px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.announce .pill {
+  background: var(--orange);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: .5px;
+  white-space: nowrap;
+}
+.announce-text { color: rgba(255,255,255,.9); line-height: 1.5; }
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 20px 20px 8px;
+  background: var(--bg-soft);
+}
+.stat-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 18px 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--line);
+}
+.stat-num {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--navy-900);
+  letter-spacing: -.5px;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.stat-num .unit {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gold);
+  margin-left: 2px;
+}
+.stat-label {
+  font-size: 11px;
+  color: var(--text-2);
+  line-height: 1.4;
+}
+.stat-label small { display: block; color: var(--text-3); font-size: 10px; letter-spacing: .5px; margin-top: 2px; text-transform: uppercase; }
+
+.section {
+  padding: 28px 20px 24px;
+  background: #F8F9FA;
+}
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.section-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--navy-900);
+  letter-spacing: -.3px;
+}
+.section-title .accent {
+  color: #FF6B35;
+}
+.section-sub {
+  font-size: 11px;
+  color: #999;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.summary-item {
+  background: #FFFFFF;
+  border-radius: 8px;
+  border: 1px solid #E8ECF2;
+  padding: 16px 14px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.summary-num {
+  width: 48px; height: 48px;
+  background: #1A3A5F;
+  border-radius: 8px;
+  color: #FFFFFF;
+  font-weight: 800;
+  font-size: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.summary-ttl {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1A1A2E;
+  margin-bottom: 4px;
+}
+.summary-desc {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.6;
+.section-val-vw {
+  padding-top: 8px;
+  padding-bottom: 140px;
+}
+}
+.more-link {
+  font-size: 12px;
+  color: var(--navy-700);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.feature-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 14px;
+  border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.feature-card:active { transform: scale(.98); }
+.feature-image {
+  position: relative;
+  height: 180px;
+  background-size: cover;
+  background-position: center;
+}
+.feature-image::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 0%, transparent 50%, rgba(10,31,68,.4) 100%);
+}
+.feature-tag {
+  position: absolute;
+  top: 14px; left: 14px;
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(10px);
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--navy-900);
+  letter-spacing: .5px;
+  z-index: 2;
+}
+.feature-content {
+  padding: 16px 18px 18px;
+}
+.feature-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy-900);
+  margin-bottom: 6px;
+  letter-spacing: -.2px;
+}
+.feature-desc {
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.55;
+  margin-bottom: 10px;
+}
+.feature-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--navy-50);
+  color: var(--navy-700);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 6px;
+}
+.chip.gold { background: linear-gradient(135deg, #FFF6E0 0%, #FFEBC2 100%); color: #8B6A1F; }
+.chip.teal { background: #E0F7F7; color: #066; }
+
+.usps {
+  padding: 24px 20px;
+  background: var(--bg);
+}
+.usp-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.usp-item {
+  background: var(--navy-50);
+  border-radius: var(--radius);
+  padding: 16px 14px;
+  border: 1px solid var(--line);
+}
+.usp-num {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--navy-700);
+  letter-spacing: -.5px;
+  margin-bottom: 4px;
+}
+.usp-num .small { font-size: 13px; color: var(--text-2); font-weight: 600; }
+.usp-label {
+  font-size: 12px;
+  color: var(--text-1);
+  font-weight: 600;
+  line-height: 1.4;
+}
+.usp-desc {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   PROJECT PAGE
+   ============================================================ */
+.page-header {
+  position: relative;
+  height: 240px;
+  background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-700) 100%);
+  color: #fff;
+  padding: calc(var(--status-h) + var(--header-h) + 20px) 24px 24px;
+  overflow: hidden;
+}
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: -50%; right: -30%;
+  width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(212,162,76,.3) 0%, transparent 70%);
+  pointer-events: none;
+}
+.page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -40%; left: -20%;
+  width: 320px; height: 320px;
+  background: radial-gradient(circle, rgba(10,168,168,.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+.page-header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -.5px;
+  margin-bottom: 8px;
+  position: relative;
+}
+.page-header .lead {
+  font-size: 14px;
+  color: rgba(255,255,255,.85);
+  line-height: 1.5;
+  position: relative;
+  max-width: 320px;
+}
+.page-header .eyebrow {
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  color: var(--gold-lt);
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  position: relative;
+}
+
+.content-card {
+  background: var(--bg);
+  margin: 14px 16px;
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--line);
+}
+.card-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--navy-50);
+  color: var(--navy-700);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 6px;
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+}
+.card-tag.gold { background: linear-gradient(135deg, #FFF6E0 0%, #FFEBC2 100%); color: #8B6A1F; }
+.card-tag.teal { background: #E0F7F7; color: #066; }
+.card-tag.orange { background: #FFE9DD; color: var(--orange); }
+
+.card-h {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--navy-900);
+  margin-bottom: 6px;
+  letter-spacing: -.3px;
+  line-height: 1.25;
+}
+.card-h .accent { color: var(--orange); }
+.card-sub {
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.image-block {
+  width: 100%;
+  height: 200px;
+  background-size: cover;
+  background-position: center;
+  border-radius: var(--radius);
+  position: relative;
+  overflow: hidden;
+  margin: 14px 0;
+}
+.image-block.large { height: 240px; }
+.image-block .label {
+  position: absolute;
+  bottom: 14px; left: 14px;
+  background: rgba(10,31,68,.7);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 6px;
+  letter-spacing: .5px;
+}
+
+.num-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.num-list li {
+  display: flex;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px dashed var(--line);
+}
+.num-list li:last-child { border-bottom: none; }
+.num-list .num {
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--navy-700) 0%, var(--navy-500) 100%);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  letter-spacing: 0;
+}
+.num-list .num.gold { background: linear-gradient(135deg, var(--gold) 0%, var(--orange) 100%); }
+.num-list .text {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-1);
+  line-height: 1.6;
+}
+.num-list .text strong {
+  color: var(--navy-900);
+  font-weight: 700;
+}
+
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin: 8px 0 4px;
+}
+.compare-table th {
+  background: var(--navy-900);
+  color: #fff;
+  padding: 10px 8px;
+  font-weight: 700;
+  text-align: left;
+  font-size: 11px;
+  letter-spacing: .5px;
+}
+.compare-table th:first-child { border-top-left-radius: 8px; }
+.compare-table th:last-child { border-top-right-radius: 8px; }
+.compare-table td {
+  padding: 12px 8px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+.compare-table td:first-child {
+  font-weight: 700;
+  color: var(--navy-900);
+  background: var(--navy-50);
+  font-size: 11px;
+}
+.compare-table td.advantage {
+  background: linear-gradient(135deg, #FFF6E0 0%, #FFEBC2 100%);
+  color: #6B4D14;
+  font-weight: 600;
+  font-size: 11px;
+}
+.compare-table tr:last-child td:first-child { border-bottom-left-radius: 8px; }
+.compare-table tr:last-child td:last-child { border-bottom-right-radius: 8px; }
+
+/* ============================================================
+   SPACE PAGE
+   ============================================================ */
+.space-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 16px 20px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+.space-tab {
+  flex: 1;
+  padding: 10px 12px;
+  background: var(--navy-50);
+  color: var(--navy-700);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  transition: all .2s ease;
+}
+.space-tab.active {
+  background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-700) 100%);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(10,31,68,.25);
+}
+
+.building-card {
+  margin: 16px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--bg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--line);
+}
+.building-hero {
+  position: relative;
+  height: 220px;
+  background-size: cover;
+  background-position: center;
+}
+.building-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10,31,68,0) 30%, rgba(10,31,68,.85) 100%);
+}
+.building-hero-info {
+  position: absolute;
+  bottom: 16px; left: 16px; right: 16px;
+  color: #fff;
+}
+.building-hero-info .name {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -.3px;
+  text-shadow: 0 2px 12px rgba(0,0,0,.4);
+}
+.building-hero-info .sub {
+  font-size: 12px;
+  color: rgba(255,255,255,.9);
+  margin-top: 4px;
+  letter-spacing: 1px;
+}
+
+.building-meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border-bottom: 1px solid var(--line);
+}
+.meta-cell {
+  padding: 14px 12px;
+  text-align: center;
+  border-right: 1px solid var(--line);
+}
+.meta-cell:last-child { border-right: none; }
+.meta-cell .num {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--navy-900);
+  line-height: 1;
+}
+.meta-cell .num small {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+  margin-left: 2px;
+}
+.meta-cell .lbl {
+  font-size: 10px;
+  color: var(--text-2);
+  margin-top: 4px;
+  letter-spacing: .5px;
+}
+
+.floor-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin: 0;
+}
+.floor-table th {
+  background: var(--navy-50);
+  color: var(--navy-700);
+  padding: 10px 8px;
+  font-weight: 700;
+  text-align: left;
+  font-size: 11px;
+  letter-spacing: .5px;
+}
+.floor-table td {
+  padding: 12px 8px;
+  border-bottom: 1px solid var(--line);
+  color: var(--text-1);
+  font-size: 12px;
+}
+.floor-table td.tag {
+  color: var(--navy-700);
+  font-weight: 700;
+}
+.floor-table td.area {
+  color: var(--orange);
+  font-weight: 700;
+}
+
+.plan-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 16px;
+}
+.plan-img {
+  aspect-ratio: 1.4/1;
+  border-radius: var(--radius);
+  background-size: cover;
+  background-position: center;
+  border: 1px solid var(--line);
+  background-color: var(--navy-50);
+  position: relative;
+  overflow: hidden;
+}
+.plan-img .ttl {
+  position: absolute;
+  bottom: 8px; left: 8px;
+  right: 8px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(10,31,68,.75);
+  backdrop-filter: blur(6px);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  text-align: center;
+}
+
+.interior-scroll {
+  position: relative;
+  padding: 0 0 16px;
+}
+.interior-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  gap: 10px;
+  padding: 0 16px;
+  scrollbar-width: none;
+}
+.interior-track::-webkit-scrollbar { display: none; }
+.interior-img {
+  flex: 0 0 75%;
+  scroll-snap-align: start;
+  aspect-ratio: 4/3;
+  border-radius: 12px;
+  background-size: cover;
+  background-position: center;
+  background-color: var(--navy-50);
+  border: 1px solid var(--line);
+}
+.interior-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+.interior-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--text-3);
+  opacity: .35;
+  transition: opacity .25s, width .25s, background .25s;
+}
+.interior-dot.active {
+  opacity: 1;
+  width: 18px;
+  border-radius: 3px;
+  background: var(--navy-700);
+}}
+
+/* ============================================================
+   INVESTMENT PAGE — Dual-Theme (Deep Navy + White Sections)
+   ============================================================ */
+
+/* MODULE 0: Unified Gradient Wrap */
+.inv-nv-top-wrap {
+  background: linear-gradient(180deg, #0D1B3C 0%, #142A5E 100%);
+}
+
+/* MODULE 1: Hero Zone (Deep Navy Gradient) */
+.inv-nv-hero {
+  padding: 20px 12px 28px;
+  background: transparent;
+  color: #fff;
+}
+.inv-nv-brand {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+}
+.inv-nv-brand img {
+  width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
+}
+.inv-nv-brand-txt {
+  display: flex; flex-direction: column;
+}
+.inv-nv-brand-txt .zh {
+  font-size: 18px; font-weight: 700; color: #fff;
+}
+.inv-nv-brand-txt .en {
+  font-size: 12px; color: #C4C9D3; letter-spacing: 1px;
+}
+.inv-nv-hero .eng-tag {
+  display: inline-block; font-size: 12px; font-weight: 700;
+  color: #D4A24C; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px;
+}
+.inv-nv-hero .main-title {
+  font-size: 30px; font-weight: 900; color: #fff; line-height: 1.2;
+  margin-bottom: 8px; letter-spacing: 0.5px;
+}
+.inv-nv-hero .main-title .gold { color: #FF8C42; }
+.inv-nv-hero .desc {
+  font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.6;
+}
+
+/* MODULE 2: Total ROI Card Zone */
+.inv-nv-roi-zone {
+  padding: 20px 20px 24px;
+  background: transparent;
+}
+.inv-nv-roi-card {
+  background: #1E3352; border-radius: 16px; padding: 24px 20px; color: #fff;
+}
+.inv-nv-roi-head {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;
+}
+.inv-nv-roi-head .roi-label {
+  font-size: 14px; font-weight: 700; color: #D4A24C; letter-spacing: 0.5px;
+}
+.inv-nv-roi-head .badge {
+  display: inline-block; background: #FF8C42; color: #fff; font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: 6px;
+}
+.inv-nv-roi-num {
+  font-size: 56px; font-weight: 900; line-height: 1; margin-bottom: 6px;
+}
+.inv-nv-roi-desc {
+  font-size: 12px; color: rgba(255,255,255,0.55); line-height: 1.5; margin-bottom: 14px;
+}
+.inv-nv-roi-prog {
+  height: 6px; background: #3A4A5A; border-radius: 3px; margin-bottom: 20px; overflow: hidden;
+}
+.inv-nv-roi-prog .fill {
+  height: 100%; border-radius: 3px;
+  background: linear-gradient(90deg, #D4A24C, #FF8C42);
+}
+.inv-nv-roi-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.inv-nv-roi-cell {
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px; padding: 14px 12px; text-align: center;
+}
+.inv-nv-roi-cell .cell-lbl { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+.inv-nv-roi-cell .cell-val { font-size: 18px; font-weight: 700; color: #D4A24C; }
+
+/* MODULE 3 & 5: White Sections */
+.inv-nv-section { padding: 24px 20px; }
+.inv-nv-section.white { background: #FFFFFF; }
+.inv-nv-section.lgray { background: #F6F8FC; }
+.inv-nv-section.dark { background: #0A1F3A; }
+
+.inv-nv-sec-tag-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+}
+.inv-nv-sec-icon {
+  width: 22px; height: 22px; border-radius: 4px; background: #FF6B00;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 12px; font-weight: 700; flex-shrink: 0;
+}
+.inv-nv-sec-tag {
+  font-size: 12px; font-weight: 700; color: #FF6B00; text-transform: uppercase; letter-spacing: 1px;
+}
+.inv-nv-sec-tag.cyan { color: #0AA8A8; }
+.inv-nv-sec-tag.gray { color: #888; }
+.inv-nv-sec-title {
+  font-size: 18px; font-weight: 800; color: #2D3748; margin-bottom: 6px;
+}
+.inv-nv-sec-title.white { color: #fff; }
+.inv-nv-sec-desc {
+  font-size: 14px; color: #4A5568; line-height: 1.55; margin-bottom: 20px;
+}
+.inv-nv-sec-desc.light { color: #C4C9D3; }
+
+/* MODULE 3: Comparison Bars */
+.inv-nv-cmp { display: flex; flex-direction: column; gap: 10px; }
+.inv-nv-cmp-row { display: flex; align-items: center; gap: 10px; }
+.inv-nv-cmp-row .lbl-wrap { width: 80px; flex-shrink: 0; }
+.inv-nv-cmp-row .lbl-zh { font-size: 13px; font-weight: 600; color: #2D3748; }
+.inv-nv-cmp-row .lbl-en { font-size: 10px; color: #A0AEC0; }
+.inv-nv-cmp-row .bar-wrap {
+  flex: 1; height: 8px; background: #EDF2F7; border-radius: 4px; overflow: hidden;
+}
+.inv-nv-cmp-row .bar-fill { height: 100%; border-radius: 4px; }
+.inv-nv-cmp-row .bar-fill.blue { background: linear-gradient(90deg, #66CCEF, #4DA8D6); }
+.inv-nv-cmp-row .bar-fill.gold { background: linear-gradient(90deg, #FFD166, #FFB84E); }
+.inv-nv-cmp-row .bar-fill.orange { background: linear-gradient(90deg, #FF6B00, #FF9A3C); }
+.inv-nv-cmp-row .pct {
+  width: 60px; flex-shrink: 0; text-align: right; font-size: 13px; font-weight: 700; color: #2D3748;
+}
+.inv-nv-cmp-row.hl .lbl-zh { color: #FF6B00; font-size: 14px; }
+.inv-nv-cmp-row.hl .pct { color: #FF6B00; font-size: 16px; }
+.inv-nv-ours-tag {
+  display: inline-block; background: #FF9A3C; color: #fff; font-size: 10px; font-weight: 700;
+  padding: 1px 6px; border-radius: 3px; margin-right: 4px;
+}
+
+/* MODULE 4: SECTION B Cards */
+.inv-nv-card-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+.inv-nv-card-w {
+  background: #fff; border-radius: 12px; border: 1px solid #E2E8F0;
+  padding: 16px; display: flex; gap: 12px; align-items: flex-start;
+}
+.inv-nv-card-num {
+  flex-shrink: 0; width: 32px; height: 32px; border-radius: 8px;
+  background: #1A365D; color: #fff; display: flex; align-items: center;
+  justify-content: center; font-size: 14px; font-weight: 800;
+}
+.inv-nv-card-body { flex: 1; }
+.inv-nv-card-body .c-title { font-size: 14px; font-weight: 700; color: #2D3748; margin-bottom: 3px; }
+.inv-nv-card-body .c-desc { font-size: 12px; color: #718096; line-height: 1.5; }
+
+.inv-nv-highlight-card {
+  background: #1A365D; border-radius: 12px; padding: 18px; color: #fff;
+  margin-bottom: 8px;
+}
+.inv-nv-highlight-card .hl-label { font-size: 13px; color: #C4C9D3; margin-bottom: 6px; }
+.inv-nv-highlight-card .hl-num { font-size: 28px; font-weight: 900; color: #FFB84E; margin-bottom: 6px; }
+.inv-nv-highlight-card .hl-desc { font-size: 12px; color: rgba(255,255,255,0.55); line-height: 1.5; }
+
+/* MODULE 5: SECTION C Info Cards */
+.inv-nv-info-card {
+  display: flex; gap: 12px; align-items: flex-start; padding: 16px;
+  background: #fff; border: 1px solid #E2E8F0; border-radius: 12px; margin-bottom: 12px;
+}
+.inv-nv-info-icon {
+  flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; color: #fff;
+}
+.inv-nv-info-icon.cyan { background: #0AA8A8; }
+.inv-nv-info-icon.navy { background: #1A365D; }
+.inv-nv-info-body { flex: 1; font-size: 13px; color: #4A5568; line-height: 1.6; }
+.inv-nv-info-body strong { color: #E53E3E; font-weight: 700; }
+
+/* MODULE 6: Value Overview Cards */
+.inv-nv-val-list { display: flex; flex-direction: column; gap: 8px; }
+.inv-nv-val-card {
+  display: flex; gap: 12px; align-items: center; padding: 12px 20px;
+  background: #1A365D; border-radius: 10px;
+}
+.inv-nv-val-num {
+  flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,0.15); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800;
+}
+.inv-nv-val-body { flex: 1; }
+.inv-nv-val-body .v-title { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+.inv-nv-val-body .v-desc { font-size: 12px; color: rgba(255,255,255,0.5); }
+
+.inv-nv-val-card.special {
+  background: linear-gradient(135deg, #F4A261, #E76F51);
+  padding: 16px 20px;
+}
+.inv-nv-val-card.special .inv-nv-val-body .v-title { color: #fff; }
+.inv-nv-val-card.special .inv-nv-val-body .v-desc { color: rgba(255,255,255,0.85); }
+
+/* MODULE 7: Bottom CTA */
+.inv-nv-cta {
+  padding: 32px 24px 80px;
+  background: linear-gradient(180deg, #F4A261, #E76F51);
+  text-align: center;
+}
+.inv-nv-cta .cta-title { font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 10px; }
+.inv-nv-cta .cta-desc {
+  font-size: 14px; color: rgba(255,255,255,0.85); line-height: 1.6; margin-bottom: 20px;
+}
+.inv-nv-cta .cta-btn {
+  display: inline-block; background: #fff; color: #E76F51; font-size: 16px; font-weight: 700;
+  padding: 12px 36px; border-radius: 24px; text-decoration: none;
+}
+
+/* ============================================================
+   CONTACT PAGE
+   ============================================================ */
+.contact-hero {
+  background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-700) 100%);
+  color: #fff;
+  padding: 30px 24px 32px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.contact-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 50%, rgba(212,162,76,.2) 0%, transparent 60%);
+}
+.contact-hero .ico-circle {
+  width: 60px; height: 60px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--orange) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(255,107,53,.4);
+  position: relative;
+}
+.contact-hero h1 {
+  font-size: 26px;
+  font-weight: 800;
+  margin-bottom: 6px;
+  letter-spacing: -.5px;
+  position: relative;
+}
+.contact-hero .sub {
+  font-size: 13px;
+  color: rgba(255,255,255,.85);
+  line-height: 1.6;
+  position: relative;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.contact-card {
+  background: var(--bg);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin: 16px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--line);
+}
+
+.contact-info {
+  list-style: none;
+}
+.contact-info li {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+.contact-info li:last-child { border-bottom: none; }
+.contact-info .ico {
+  flex-shrink: 0;
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: var(--navy-50);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--navy-700);
+}
+.contact-info .ico.gold { background: linear-gradient(135deg, #FFF6E0, #FFEBC2); color: #8B6A1F; }
+.contact-info .ico.orange { background: #FFE9DD; color: var(--orange); }
+.contact-info .lbl {
+  font-size: 11px;
+  color: var(--text-3);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.contact-info .val {
+  font-size: 15px;
+  color: var(--navy-900);
+  font-weight: 700;
+  letter-spacing: -.2px;
+}
+.contact-info .val.small { font-size: 13px; font-weight: 500; }
+
+.contact-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 6px;
+}
+.action-btn {
+  padding: 14px 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.action-btn.call {
+  background: linear-gradient(135deg, var(--orange) 0%, var(--gold) 100%);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(255,107,53,.3);
+}
+.action-btn.msg {
+  background: var(--navy-900);
+  color: #fff;
+}
+
+.map-card {
+  margin: 16px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--bg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--line);
+}
+.map-frame {
+  width: 100%;
+  height: 240px;
+  border: none;
+  display: block;
+}
+.map-info {
+  padding: 16px;
+}
+.map-info .ttl {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy-900);
+  margin-bottom: 4px;
+}
+.map-info .desc {
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+/* ============================================================
+   Gallery / Amenities / Operation on Contact Page
+   ============================================================ */
+.amenities-section {
+  background: var(--bg);
+  padding: 24px 20px;
+}
+.amenities-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--navy-900);
+  margin-bottom: 4px;
+  letter-spacing: -.3px;
+}
+.amenities-sub {
+  font-size: 12px;
+  color: var(--text-3);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.amenity-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.amenity {
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.amenity .pic {
+  width: 100%;
+  height: 110px;
+  background-size: cover;
+  background-position: center;
+  background-color: var(--navy-50);
+}
+.amenity .info {
+  padding: 12px 14px;
+}
+.amenity .ttl {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy-900);
+  margin-bottom: 2px;
+}
+.amenity .desc {
+  font-size: 11px;
+  color: var(--text-2);
+  line-height: 1.4;
+}
+.amenity .live {
+  display: inline-block;
+  background: var(--green);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 4px;
+  letter-spacing: .5px;
+  margin-bottom: 6px;
+}
+
+/* ============================================================
+   Splash screen
+   ============================================================ */
+.splash {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #0A1F44 0%, #1E3A8A 50%, #2A4FA8 100%);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  transition: opacity .6s ease, visibility 0s linear .6s;
+}
+.splash.hide { opacity: 0; visibility: hidden; }
+.splash-mark {
+  width: 80px; height: 80px;
+  border-radius: 22px;
+  box-shadow: 0 12px 36px rgba(255,107,53,.4);
+  animation: pulse 2s ease-in-out infinite;
+  object-fit: contain;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 12px 36px rgba(255,107,53,.4); }
+  50% { transform: scale(1.05); box-shadow: 0 16px 48px rgba(255,107,53,.6); }
+}
+.splash-name {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+}
+.splash-en {
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: var(--gold-lt);
+  font-weight: 600;
+  margin-bottom: 32px;
+}
+.splash-loader {
+  display: flex;
+  gap: 6px;
+}
+.splash-loader span {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--gold-lt);
+  animation: bounce 1.4s ease-in-out infinite;
+}
+.splash-loader span:nth-child(2) { animation-delay: .2s; }
+.splash-loader span:nth-child(3) { animation-delay: .4s; }
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(.5); opacity: .5; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+/* ============================================================
+   Lightbox (Plan image zoom)
+   ============================================================ */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.92);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .3s ease, visibility 0s linear .3s;
+}
+.lightbox.open {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity .3s ease, visibility 0s linear 0s;
+}
+.lightbox img {
+  max-width: 94%;
+  max-height: 85vh;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  transform: scale(.9);
+  transition: transform .3s ease;
+}
+.lightbox.open img { transform: scale(1); }
+.lightbox-close {
+  position: absolute;
+  top: 16px; right: 16px;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.15);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 10;
+}
+.lightbox-close:active { background: rgba(255,255,255,.3); }
+.plan-img { cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- ===== Splash ===== -->
+  <div class="splash" id="splash">
+    <img class="splash-mark" src="images/logo.png" alt="深江科创">
+    <div class="splash-name">深江·科创广场</div>
+    <div class="splash-en">SHENJIANG · POWER SQUARE</div>
+    <div class="splash-loader"><span></span><span></span><span></span></div>
+  </div>
+
+  <!-- ===== iOS Status Bar ===== -->
+  <div class="status-bar" id="statusBar"></div>
+
+  <!-- ===== App Header ===== -->
+  <header class="app-header" id="appHeader">
+    <div class="brand">
+      <img class="brand-mark" src="images/logo.png" alt="深江科创">
+      <div>
+        <div class="brand-name">深江·科创广场</div>
+        <div class="brand-en">POWER SQUARE</div>
+      </div>
+    </div>
+    <button class="icon-btn" aria-label="分享">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+    </button>
+  </header>
+
+  <!-- ===== Pages ===== -->
+  <div class="pages">
+
+    <!-- =====================================================
+         HOME PAGE
+         ===================================================== -->
+    <section class="page active" id="page-home" data-title="首页">
+      <div class="hero">
+        <div class="hero-eyebrow"><span class="dot"></span>HUB CITY · 枢纽新城核心</div>
+        <div class="hero-title">科创资产<span class="accent">双收益</span><br>价值不动产</div>
+        <div class="hero-en">A Hub-Grade Sci-Tech Innovation Park</div>
+        <div class="hero-sub">运动主题科创园区 · 青年创业集聚高地</div>
+        <div class="hero-cta">
+          <button class="btn-primary" data-goto="page-investment">
+            投资价值
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+          <button class="btn-secondary" data-goto="page-project">了解项目</button>
+        </div>
+      </div>
+
+      <div class="announce">
+        <span class="pill">入驻</span>
+        <span class="announce-text">广东省科学院江门产业研究院已正式入驻,即收稳定租金现金流 + 尽享长期资产增值红利</span>
+      </div>
+
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-num">6<span class="unit">m</span></div>
+          <div class="stat-label">超高灵动层高<small>ULTRA-HIGH CEILING</small></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">100~<span class="unit">3000m²</span></div>
+          <div class="stat-label">自由拆分组合<small>FLEXIBLE LAYOUT</small></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">300<span class="unit">m</span></div>
+          <div class="stat-label">直达江门高铁站<small>TO JIANGMEN STATION</small></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">8~11<span class="unit">%</span></div>
+          <div class="stat-label">综合年化总回报<small>TOTAL ANNUAL ROI</small></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <div>
+            <div class="section-sub">CORE HIGHLIGHTS</div>
+            <div class="section-title">核心<span class="accent">价值</span>亮点</div>
+          </div>
+          <a class="more-link" data-goto="page-project">查看全部 &rarr;</a>
+        </div>
+
+        <div class="feature-card" data-goto="page-project">
+          <div class="feature-image" style="background-image: url('images/new/transport.jpg');">
+            <span class="feature-tag">交通枢纽</span>
+          </div>
+          <div class="feature-content">
+            <div class="feature-title">立体路网 · 300米直达江门高铁站</div>
+            <div class="feature-desc">1小时高铁通达广深港澳核心城市,紧邻江门大道城市主干道,持续吸纳湾区跨城科创企业承租。</div>
+            <div class="feature-meta">
+              <span class="chip teal">300m 高铁站</span>
+              <span class="chip">1h 通达湾区</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="feature-card" data-goto="page-project">
+          <div class="feature-image" style="background-image: url('images/new/industry-academy.jpg');">
+            <span class="feature-tag">产业背书</span>
+          </div>
+          <div class="feature-content">
+            <div class="feature-title">省科院实体入驻 · 赋能产业集聚</div>
+            <div class="feature-desc">广东省科学院江门产业研究院(1座3楼实景运营),硬性锚定优质长租租户,租金稳定性远超普通园区。</div>
+            <div class="feature-meta">
+              <span class="chip gold">国家级高新</span>
+              <span class="chip">博士团队常驻</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="feature-card" data-goto="page-project">
+          <div class="feature-image" style="background-image: url('images/new/product-diff.jpg');">
+            <span class="feature-tag">稀缺定位</span>
+          </div>
+          <div class="feature-content">
+            <div class="feature-title">运动主题 · 区域稀缺科创园区</div>
+            <div class="feature-desc">户外步道、24小时健身房,契合员工健康管理需求,形成独有租赁吸引力,长期稳定租金来源。</div>
+            <div class="feature-meta">
+              <span class="chip gold">运动主题</span>
+              <span class="chip">24h 健身房</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="usps">
+        <div class="section-head">
+          <div>
+            <div class="section-sub">COMPETITIVE EDGE</div>
+            <div class="section-title">竞品差异化<span class="accent">对比</span></div>
+          </div>
+        </div>
+        <div class="usp-grid">
+          <div class="usp-item">
+            <div class="usp-num">3<span class="small">重定位</span></div>
+            <div class="usp-label">运动+社群+科创</div>
+            <div class="usp-desc">入驻企业圈层纯粹稳定</div>
+          </div>
+          <div class="usp-item">
+            <div class="usp-num">6<span class="small">m层高</span></div>
+            <div class="usp-label">超高灵动空间</div>
+            <div class="usp-desc">自由分割出租适配性极强</div>
+          </div>
+          <div class="usp-item">
+            <div class="usp-num">AI<span class="small">智慧</span></div>
+            <div class="usp-label">标准化运营</div>
+            <div class="usp-desc">常态化硬件养护抗贬值</div>
+          </div>
+          <div class="usp-item">
+            <div class="usp-num">省<span class="small">科院</span></div>
+            <div class="usp-label">科研平台赋能</div>
+            <div class="usp-desc">租金溢价空间更高</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Value Overview (from folder 10) -->
+      <div class="section section-val-vw">
+        <div class="section-head">
+          <div>
+            <div class="section-sub">VALUE OVERVIEW</div>
+            <div class="section-title">价值总览 <span class="accent">· 置业逻辑</span></div>
+          </div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-num">01</div>
+          <div><div class="summary-ttl">区位价值</div><div class="summary-desc">枢纽新城核心地段,交通枢纽加持,增值底盘稳固</div></div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-num">02</div>
+          <div><div class="summary-ttl">竞争价值</div><div class="summary-desc">运动园区 + 青年社群双稀缺定位,竞品无法复制</div></div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-num">03</div>
+          <div><div class="summary-ttl">产业价值</div><div class="summary-desc">省科院实体入驻背书,锁定优质长租租户,租金稳</div></div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-num">04</div>
+          <div><div class="summary-ttl">产品价值</div><div class="summary-desc">6米超高灵活层高,户型自由分割,出租适配性拉满</div></div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-num">05</div>
+          <div><div class="summary-ttl">运维价值</div><div class="summary-desc">AI智慧园区 + 标准化运营长效管护,资产不易折旧</div></div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-num">06</div>
+          <div><div class="summary-ttl">配套价值</div><div class="summary-desc">超市、咖啡、顺丰、24小时健身房全部实景运营,自带租金溢价</div></div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-num">07</div>
+          <div><div class="summary-ttl">投资价值</div><div class="summary-desc">当期净租金4.5%-5.5% + 年均3%-5%增值,综合年化8%-11%,双收益不动产抗通胀优选</div></div>
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         PROJECT PAGE
+         ===================================================== -->
+    <section class="page" id="page-project" data-title="项目">
+      <div class="page-header">
+        <div class="eyebrow">PROJECT ADVANTAGES</div>
+        <h1>项目核心<span style="color: var(--gold-lt);">优势</span></h1>
+        <div class="lead">枢纽新城核心板块,江门站商务圈资源高度集聚,持续吸纳优质科创企业入驻。</div>
+      </div>
+
+      <!-- SECTION 01: 板块能级/核心区位 (from folder 2) -->
+      <div class="content-card">
+        <span class="card-tag gold">SECTION 01 · LOCATION</span>
+        <div class="card-h">板块能级 · <span class="accent">核心区位</span>锚定长期增值底盘</div>
+        <div class="card-sub">新会核心活力商务板块,项目占位枢纽新城核心板块,江门站商务圈资源高度集聚,区域科创企业、高端人才持续导入,政府重点规划科创商务走廊,办公租赁需求长期旺盛,客源储备充足。</div>
+        <div class="image-block large" style="background-image: url('images/new/location-2.jpg');">
+          <div class="label">枢纽新城 · 核心区位</div>
+        </div>
+      </div>
+
+      <!-- SECTION 02: 资产持续增值确定性研判 (from folder 2) -->
+      <div class="content-card">
+        <span class="card-tag teal">SECTION 02 · APPRECIATION</span>
+        <div class="card-h">资产持续增值<span class="accent">确定性</span>研判</div>
+        <ul class="num-list" style="margin-top: 10px;">
+          <li>
+            <div class="num">1</div>
+            <div class="text"><strong>枢纽新城核心产业办公用地出让逐年收紧</strong>,优质存量办公物业稀缺性持续走高。</div>
+          </li>
+          <li>
+            <div class="num">2</div>
+            <div class="text"><strong>深中通道湾区一体化红利持续释放</strong>,西岸承接湾区科创产业外溢,外来入驻企业稳步递增。</div>
+          </li>
+          <li>
+            <div class="num">3</div>
+            <div class="text"><strong>省科院落地带动上下游产业链集群发展</strong>,片区产业能级逐级抬升,租金与物业估值具备长期上调空间。</div>
+          </li>
+        </ul>
+        <div class="image-block" style="background-image: url('images/new/location-1.jpg');">
+          <div class="label">航拍鸟瞰 · 枢纽新城</div>
+        </div>
+      </div>
+
+      <!-- SECTION 03: 竞品对比表 (from folder 2) -->
+      <div class="content-card">
+        <span class="card-tag orange">SECTION 03 · COMPARISON</span>
+        <div class="card-h">竞品横向<span class="accent">差异化</span>对比</div>
+        <div class="card-sub">本项目独家竞争优势 vs 竞品核心短板</div>
+        <table class="compare-table">
+          <thead>
+            <tr><th>物业类型</th><th>核心短板</th><th>本项目独家竞争优势</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>传统高层写字楼</td>
+              <td>层高压抑、配套零散、业态混杂、租户流动性高</td>
+              <td class="advantage">运动园区+青年社群+科创产业三重定位,入驻企业圈层纯粹稳定</td>
+            </tr>
+            <tr>
+              <td>老旧产业园区</td>
+              <td>运营松散、管护缺位、硬件老化、资产逐年贬值</td>
+              <td class="advantage">统一标准化运营+AI智慧管理,常态化硬件养护,资产抗贬值能力突出</td>
+            </tr>
+            <tr>
+              <td>常规产业园</td>
+              <td>仅提供基础办公空间,无产业资源赋能</td>
+              <td class="advantage">省科院科研平台深度赋能,自带产业导流能力,租金溢价空间更高</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- SECTION 04: 立体路网/交通 (from folder 3) -->
+      <div class="content-card">
+        <span class="card-tag">SECTION 04 · TRANSPORT</span>
+        <div class="card-h">立体路网 · <span class="accent">枢纽交通</span>夯实租赁客流基础</div>
+        <div class="card-sub">项目直线 <strong style="color: var(--orange); font-size: 16px;">300米</strong>直达江门高铁站,1小时高铁通达广深港澳核心城市;紧邻江门大道城市主干道,快速串联新会、蓬江、江海三区。高效商务出行条件,持续吸纳湾区跨城科创企业承租,承租周期更长、空置率更低,租金收益稳定性更强。</div>
+        <div class="image-block" style="background-image: url('images/new/transport.jpg');">
+          <div class="label">高铁直达 · 1小时通湾区</div>
+        </div>
+      </div>
+
+      <!-- SECTION 05: 产业背书/省科院 (from folder 5) -->
+      <div class="content-card">
+        <span class="card-tag gold">SECTION 05 · INDUSTRY</span>
+        <div class="card-h">产业背书 · <span class="accent">省科院实体</span>入驻赋能产业集聚</div>
+        <div class="card-sub" style="font-weight: 700; color: var(--navy-900);">重磅入驻:广东省科学院江门产业研究院(1座3楼实景运营)</div>
+        <div class="card-sub">由广东省科学院、江门市联合共建官方科创平台,国家级高新技术实体机构常驻办公。</div>
+        <ul class="num-list" style="margin-top: 6px;">
+          <li>
+            <div class="num gold">1</div>
+            <div class="text"><strong>产业方向:</strong>聚焦高端装备、新一代信息技术、新材料三大战略性新兴产业</div>
+          </li>
+          <li>
+            <div class="num gold">2</div>
+            <div class="text"><strong>硬核实力:</strong>博士科研团队常驻办公 + 超算中心算力支撑</div>
+          </li>
+          <li>
+            <div class="num gold">3</div>
+            <div class="text"><strong>产业赋能:</strong>可提供技术研发、成果转化、人才引育、产学研深度合作全链条服务</div>
+          </li>
+          <li>
+            <div class="num gold">4</div>
+            <div class="text"><strong>置业利好:</strong>硬性锚定园区科创底色,定向筛选上下游优质长租租户,租金稳定性远超普通园区</div>
+          </li>
+        </ul>
+        <div class="image-block" style="background-image: url('images/new/industry-academy.jpg');">
+          <div class="label">广东省科学院江门产研院</div>
+        </div>
+      </div>
+
+      <!-- SECTION 06: 产品差异化 (from folder 4) -->
+      <div class="content-card">
+        <span class="card-tag teal">SECTION 06 · PRODUCT</span>
+        <div class="card-h">产品差异化 · <span class="accent">稀缺园区</span>定位构筑竞争壁垒</div>
+        <ul class="num-list" style="margin-top: 10px;">
+          <li>
+            <div class="num">3.1</div>
+            <div class="text"><strong>运动主题科创园区(区域稀缺)</strong>规划户外休闲步道、露天活动场地,配套专属24小时健身房,打破传统办公久坐桎梏,契合现代化企业员工健康管理需求,形成独有租赁吸引力。</div>
+          </li>
+          <li>
+            <div class="num">3.2</div>
+            <div class="text"><strong>青年创业专属集聚社区</strong>园区定向吸纳高新技术企业、青年科创创业团队,高学历年轻化企业扎堆入驻,企业间资源互通、合作频繁,续租意愿强,长期锁定稳定租金来源。</div>
+          </li>
+          <li>
+            <div class="num">3.3</div>
+            <div class="text"><strong>花园式生态办公场景</strong>多层次立体绿化、中央草坪、休闲庭院环绕建筑楼栋,办公环境优于常规写字楼,可实现租金适度溢价出租。</div>
+          </li>
+        </ul>
+        <div class="image-block" style="background-image: url('images/new/product-diff.jpg');">
+          <div class="label">24小时健身房 · 运动主题</div>
+        </div>
+      </div>
+
+      <div style="height: 40px;"></div>
+    </section>
+
+
+    <!-- =====================================================
+         SPACE PAGE
+         ===================================================== -->
+    <section class="page" id="page-space" data-title="空间">
+      <div class="page-header" style="height: 220px; padding: 20px 24px 20px;">
+        <div class="eyebrow">SPACE &amp; PRODUCT</div>
+        <h1>空间产品 · 6米<span style="color: var(--gold-lt);">超高</span>灵动户型</h1>
+        <div class="lead">市面常规写字楼层高仅3.6-4.5米,本项目标配6米超高层高,支持夹层搭建、挑空展厅、直播间、企业总部独栋定制等多种改造方案。</div>
+      </div>
+
+      <div class="space-tabs">
+        <button class="space-tab active" data-building="A">A户型 · 总部中心</button>
+        <button class="space-tab" data-building="B">B户型 · 总部中心</button>
+      </div>
+
+      <!-- ===== A户型 ===== -->
+      <div id="building-A">
+        <div class="building-card">
+          <div class="building-hero" style="background-image: url('images/new/type-a-exterior.jpg');">
+            <div class="building-hero-info">
+              <div class="name">A户型 · 总部中心</div>
+              <div class="sub">TYPE A · 入户大堂+展厅+企业总部+众创办公</div>
+            </div>
+          </div>
+          <div class="building-meta">
+            <div class="meta-cell">
+              <div class="num">6<small>m</small></div>
+              <div class="lbl">超高层高</div>
+            </div>
+            <div class="meta-cell">
+              <div class="num">约1000<small>m²</small></div>
+              <div class="lbl">单层面积</div>
+            </div>
+            <div class="meta-cell">
+              <div class="num">精装/毛坯</div>
+              <div class="lbl">装修方案</div>
+            </div>
+          </div>
+          <div class="plan-grid">
+            <div class="plan-img" style="background-image: url('images/new/type-a-plan-1.jpg');"><div class="ttl">首层平面图</div></div>
+            <div class="plan-img" style="background-image: url('images/new/type-a-plan-2.jpg');"><div class="ttl">二层平面图</div></div>
+          </div>
+          <div class="plan-grid">
+            <div class="plan-img" style="background-image: url('images/new/type-a-plan-2f-1.jpg');"><div class="ttl">A户型 · 二层平面图（1）</div></div>
+            <div class="plan-img" style="background-image: url('images/new/type-a-plan-2f-2.jpg');"><div class="ttl">A户型 · 二层平面图（2）</div></div>
+          </div>
+          <div class="interior-scroll">
+            <div class="interior-track" data-interior="a">
+              <div class="interior-img" style="background-image: url('images/new/type-a-interior-1.jpg');"></div>
+              <div class="interior-img" style="background-image: url('images/new/type-a-interior-2.jpg');"></div>
+              <div class="interior-img" style="background-image: url('images/new/type-a-interior-3.jpg');"></div>
+              <div class="interior-img" style="background-image: url('images/new/type-a-interior-4.jpg');"></div>
+              <div class="interior-img" style="background-image: url('images/new/type-a-interior-5.jpg');"></div>
+              <div class="interior-img" style="background-image: url('images/new/type-a-interior-6.jpg');"></div>
+            </div>
+            <div class="interior-dots" id="interiorDotsA">
+              <span class="interior-dot active"></span><span class="interior-dot"></span><span class="interior-dot"></span><span class="interior-dot"></span><span class="interior-dot"></span><span class="interior-dot"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== B户型 ===== -->
+      <div id="building-B" style="display: none;">
+        <div class="building-card">
+          <div class="building-hero" style="background-image: url('images/new/type-b-exterior.jpg');">
+            <div class="building-hero-info">
+              <div class="name">B户型 · 总部中心</div>
+              <div class="sub">TYPE B · 展厅+企业总部 · 二至十层</div>
+            </div>
+          </div>
+          <div class="building-meta">
+            <div class="meta-cell">
+              <div class="num">6<small>m</small></div>
+              <div class="lbl">超高层高</div>
+            </div>
+            <div class="meta-cell">
+              <div class="num">约1000<small>m²</small></div>
+              <div class="lbl">单层面积</div>
+            </div>
+            <div class="meta-cell">
+              <div class="num">精装/毛坯</div>
+              <div class="lbl">装修方案</div>
+            </div>
+          </div>
+
+          <div class="plan-grid">
+            <div class="plan-img" style="background-image: url('images/new/type-b-plan-1.jpg');"><div class="ttl">首层平面图</div></div>
+            <div class="plan-img" style="background-image: url('images/new/type-b-plan-2.jpg');"><div class="ttl">二层平面图</div></div>
+          </div>
+          <div class="plan-grid">
+            <div class="plan-img" style="background-image: url('images/new/type-b-plan-2f-1.jpg');"><div class="ttl">B户型 · 二层平面图（1）</div></div>
+            <div class="plan-img" style="background-image: url('images/new/type-b-plan-2f-2.jpg');"><div class="ttl">B户型 · 二层平面图（2）</div></div>
+          </div>
+          <div class="interior-scroll">
+            <div class="interior-track" data-interior="b">
+              <div class="interior-img" style="background-image: url('images/new/type-b-interior-1.jpg');"></div>
+              <div class="interior-img" style="background-image: url('images/new/type-b-interior-2.jpg');"></div>
+              <div class="interior-img" style="background-image: url('images/new/type-b-interior-3.jpg');"></div>
+              <div class="interior-img" style="background-image: url('images/new/type-b-interior-4.jpg');"></div>
+              <div class="interior-img" style="background-image: url('images/new/type-b-interior-5.jpg');"></div>
+              <div class="interior-img" style="background-image: url('images/new/type-b-interior-6.jpg');"></div>
+            </div>
+            <div class="interior-dots" id="interiorDotsB">
+              <span class="interior-dot active"></span><span class="interior-dot"></span><span class="interior-dot"></span><span class="interior-dot"></span><span class="interior-dot"></span><span class="interior-dot"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-card" style="margin-top: 0;">
+        <span class="card-tag gold">FLEXIBLE LAYOUT</span>
+        <div class="card-h">多元经营 · <span class="accent">适配性极强</span></div>
+        <div class="card-sub">面积区间1000-1200m²可自由拆分组合,企业自用、整租、分租均可灵活操作,租赁适配性极强,不愁客源。</div>
+        <ul class="num-list">
+          <li><div class="num">A</div><div class="text"><strong>夹层搭建</strong>利用6m层高打造双层使用空间</div></li>
+          <li><div class="num">B</div><div class="text"><strong>挑空展厅</strong>面向品牌发布、产品展示的高端商务场景</div></li>
+          <li><div class="num">C</div><div class="text"><strong>直播间</strong>适配电商直播、新媒体内容创作</div></li>
+          <li><div class="num">D</div><div class="text"><strong>企业总部</strong>高挑空定制化总部办公地标</div></li>
+        </ul>
+      </div>
+
+      <div style="height: 40px;"></div>
+    </section>
+
+
+    <!-- =====================================================
+         INVESTMENT PAGE
+         ===================================================== -->
+    <section class="page" id="page-investment" data-title="投资">
+      <div class="inv-nv-top-wrap">
+      <!-- Module 1: Hero Zone -->
+      <div class="inv-nv-hero">
+        <div class="inv-nv-brand">
+          <img src="images/logo.png" alt="深江科创广场" onerror="this.style.display='none'">
+          <div class="inv-nv-brand-txt">
+            <span class="zh">深江·科创广场</span>
+            <span class="en">POWER SQUARE</span>
+          </div>
+        </div>
+        <div class="eng-tag">INVESTMENT ANALYSIS</div>
+        <div class="main-title">双轮驱动 · <span class="gold">租金 + 增值</span></div>
+        <div class="desc">当期稳定租金现金流 + 远期资产持续增值,综合年化 8%~11% 双收益不动产通抵优选。</div>
+      </div>
+
+      <!-- Module 2: Total ROI Card -->
+      <div class="inv-nv-roi-zone">
+        <div class="inv-nv-roi-card">
+          <div class="inv-nv-roi-head">
+            <span class="roi-label">综合年化总回报 · TOTAL ROI</span>
+            <span class="badge">最高</span>
+          </div>
+          <div class="inv-nv-roi-num">8~11</div>
+          <div class="inv-nv-roi-desc">租金现金流(4.5~5.5%) + 资产增值(3~5%). 强力对冲通胀,持有越久收益越高</div>
+          <div class="inv-nv-roi-prog"><div class="fill" style="width:70%;"></div></div>
+          <div class="inv-nv-roi-grid">
+            <div class="inv-nv-roi-cell">
+              <div class="cell-lbl">净租金回报</div>
+              <div class="cell-val">4.5~5.5%</div>
+            </div>
+            <div class="inv-nv-roi-cell">
+              <div class="cell-lbl">年均增值</div>
+              <div class="cell-val">3~5%</div>
+            </div>
+            <div class="inv-nv-roi-cell">
+              <div class="cell-lbl">回本周期</div>
+              <div class="cell-val">9~12年</div>
+            </div>
+            <div class="inv-nv-roi-cell">
+              <div class="cell-lbl">空置率</div>
+              <div class="cell-val">&lt; 5%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <!-- Module 3: SECTION A — Instant Yield -->
+      <div class="inv-nv-section white">
+        <div class="inv-nv-sec-tag-row">
+          <div class="inv-nv-sec-icon">$</div>
+          <span class="inv-nv-sec-tag">SECTION A · INSTANT YIELD</span>
+        </div>
+        <div class="inv-nv-sec-title">即时收益 · 稳定现金流</div>
+        <div class="inv-nv-sec-desc">净租金回报率测算(扣除物业费、空置损耗、税费)</div>
+        <div class="inv-nv-cmp">
+          <div class="inv-nv-cmp-row">
+            <div class="lbl-wrap">
+              <div class="lbl-zh">普通住宅</div>
+              <div class="lbl-en">Residence</div>
+            </div>
+            <div class="bar-wrap"><div class="bar-fill blue" style="width:30%;"></div></div>
+            <div class="pct">2~3%</div>
+          </div>
+          <div class="inv-nv-cmp-row">
+            <div class="lbl-wrap">
+              <div class="lbl-zh">银行理财</div>
+              <div class="lbl-en">Bank</div>
+            </div>
+            <div class="bar-wrap"><div class="bar-fill blue" style="width:35%;"></div></div>
+            <div class="pct">2~3.5%</div>
+          </div>
+          <div class="inv-nv-cmp-row">
+            <div class="lbl-wrap">
+              <div class="lbl-zh">传统写字楼</div>
+              <div class="lbl-en">Office</div>
+            </div>
+            <div class="bar-wrap"><div class="bar-fill gold" style="width:60%;"></div></div>
+            <div class="pct">3.5~4.5%</div>
+          </div>
+          <div class="inv-nv-cmp-row hl">
+            <div class="lbl-wrap">
+              <span class="inv-nv-ours-tag">OURS</span>
+              <span class="lbl-zh">深江·科创广场</span>
+            </div>
+            <div class="bar-wrap"><div class="bar-fill orange" style="width:80%;"></div></div>
+            <div class="pct">4.5~5.5%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Module 4: SECTION B — Long-Term -->
+      <div class="inv-nv-section lgray">
+        <div class="inv-nv-sec-tag-row">
+          <span class="inv-nv-sec-tag">SECTION B · LONG-TERM</span>
+        </div>
+        <div class="inv-nv-sec-title">长期收益 · 资产持续增值</div>
+        <div class="inv-nv-card-list">
+          <div class="inv-nv-card-w">
+            <div class="inv-nv-card-num">1</div>
+            <div class="inv-nv-card-body">
+              <div class="c-title">土地稀缺增值</div>
+              <div class="c-desc">核心片区办公用地供给收缩，存量优质园区物业价值自然抬升</div>
+            </div>
+          </div>
+          <div class="inv-nv-card-w">
+            <div class="inv-nv-card-num">2</div>
+            <div class="inv-nv-card-body">
+              <div class="c-title">产业导入增值</div>
+              <div class="c-desc">省科院持续孵化引进上下游企业，片区办公需求逐年递增，租金同步上调</div>
+            </div>
+          </div>
+          <div class="inv-nv-card-w">
+            <div class="inv-nv-card-num">3</div>
+            <div class="inv-nv-card-body">
+              <div class="c-title">湾区红利增值</div>
+              <div class="c-desc">深中通道打通湾区一小时通勤圈，深圳、中山科创外溢企业持续进駐</div>
+            </div>
+          </div>
+        </div>
+        <div class="inv-nv-highlight-card">
+          <div class="hl-label">年均资产增值</div>
+          <div class="hl-num">3~5%</div>
+          <div class="hl-desc">依托枢纽新城区位红利 + 产业集聚效应 + 省科院赋能三重加持</div>
+        </div>
+      </div>
+
+      <!-- Module 5: SECTION C — Summary -->
+      <div class="inv-nv-section white">
+        <div class="inv-nv-sec-tag-row">
+          <span class="inv-nv-sec-tag cyan">SECTION C · SUMMARY</span>
+        </div>
+        <div class="inv-nv-sec-title">综合收益 &amp; 回本周期</div>
+        <div class="inv-nv-info-card">
+          <div class="inv-nv-info-icon cyan">i</div>
+          <div class="inv-nv-info-body">综合年化总回报(租金现金流 + 资产增值) <strong>8%~11%</strong>, 强力对冲通胀, 持有越久收益越高</div>
+        </div>
+        <div class="inv-nv-info-card">
+          <div class="inv-nv-info-icon navy">1</div>
+          <div class="inv-nv-info-body">静态投资收回本周期: <strong>9~12 年</strong>; 回本后租金近乎纯收益, 房产持续升值</div>
+        </div>
+        <div class="inv-nv-info-card">
+          <div class="inv-nv-info-icon navy">2</div>
+          <div class="inv-nv-info-body">双重使用模式: 企业自用可计入固定资产折旧; 投资购置可持续收租理财, 双向获利</div>
+        </div>
+      </div>
+
+      <!-- Module 6: Value Overview -->
+      <div class="inv-nv-section white">
+        <div class="inv-nv-sec-tag-row">
+          <span class="inv-nv-sec-tag gray">VALUE OVERVIEW</span>
+        </div>
+        <div class="inv-nv-sec-title" style="font-size:20px;">价值总览 · <span style="color:#E69C53;font-weight:800;">置业逻辑</span></div>
+        <div class="inv-nv-val-list" style="margin-top:16px;">
+          <div class="inv-nv-val-card">
+            <div class="inv-nv-val-num">01</div>
+            <div class="inv-nv-val-body">
+              <div class="v-title">区位价值</div>
+              <div class="v-desc">枢纽新城核心地段,交通枢纽加持</div>
+            </div>
+          </div>
+          <div class="inv-nv-val-card">
+            <div class="inv-nv-val-num">02</div>
+            <div class="inv-nv-val-body">
+              <div class="v-title">竞争价值</div>
+              <div class="v-desc">运动园区 + 青年社群双稀缺定位</div>
+            </div>
+          </div>
+          <div class="inv-nv-val-card">
+            <div class="inv-nv-val-num">03</div>
+            <div class="inv-nv-val-body">
+              <div class="v-title">产业价值</div>
+              <div class="v-desc">省科学院实体入驻背书,锚定优质长租户</div>
+            </div>
+          </div>
+          <div class="inv-nv-val-card">
+            <div class="inv-nv-val-num">04</div>
+            <div class="inv-nv-val-body">
+              <div class="v-title">产品价值</div>
+              <div class="v-desc">6米超高灵动层高,户型自由分割</div>
+            </div>
+          </div>
+          <div class="inv-nv-val-card">
+            <div class="inv-nv-val-num">05</div>
+            <div class="inv-nv-val-body">
+              <div class="v-title">运维价值</div>
+              <div class="v-desc">AI 智慧园区 + 标准化运营长效管护</div>
+            </div>
+          </div>
+          <div class="inv-nv-val-card">
+            <div class="inv-nv-val-num">06</div>
+            <div class="inv-nv-val-body">
+              <div class="v-title">配套价值</div>
+              <div class="v-desc">超市、咖啡、顺丰、24h 健身房全部实景运营</div>
+            </div>
+          </div>
+          <div class="inv-nv-val-card special">
+            <div class="inv-nv-val-body">
+              <div class="v-title">投资价值</div>
+              <div class="v-desc">当期净租金 4.5~5.5% + 年均 3~5% 增值,综合年化 8~11%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Module 7: Bottom CTA -->
+      <div class="inv-nv-cta">
+        <div class="cta-title">核心投资逻辑</div>
+        <div class="cta-desc">当下稳定收租,现金落袋时兑现;未来持续升值,资产不断增值,租金 + 升值双线收益同步兑现。</div>
+        <a href="#" class="cta-btn">立即预约咨询 →</a>
+      </div>
+    </section>
+
+
+    <!-- =====================================================
+         CONTACT PAGE
+         ===================================================== -->
+    <section class="page" id="page-contact" data-title="联系">
+      <div class="contact-hero">
+        <div class="ico-circle">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <h1>招商置业 · <br>合作<span style="color: var(--gold-lt);">邀约</span></h1>
+        <div class="sub">企业总部自用 · 科创研发办公 · 投资购置收租<br>同步火热受理,共享湾区产业长期红利</div>
+      </div>
+
+      <div class="contact-card">
+        <ul class="contact-info">
+          <li>
+            <div class="ico gold">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div>
+              <div class="lbl">PROJECT ADDRESS</div>
+              <div class="val">深江科创广场</div>
+              <div class="val small">广东省江门市新会区会城江湾路91号</div>
+            </div>
+          </li>
+          <li>
+            <div class="ico orange">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </div>
+            <div>
+              <div class="lbl">HOTLINE</div>
+              <div class="val">0750-6637888</div>
+              <div class="val small">咨询热线 · 工作日 9:00-18:00</div>
+            </div>
+          </li>
+          <li>
+            <div class="ico">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <div>
+              <div class="lbl">EMAIL</div>
+              <div class="val small">sjkcgc@163.com</div>
+            </div>
+          </li>
+        </ul>
+
+        <div class="contact-actions">
+          <button class="action-btn call">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            一键拨号
+          </button>
+          <button class="action-btn msg">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            在线咨询
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== Tencent Map ===== -->
+      <div class="map-card">
+        <iframe class="map-frame"
+          src="https://apis.map.qq.com/uri/v1/marker?marker=coord:22.491222,113.078487;title:深江科创广场;addr:广东省江门市新会区会城江湾路91号&amp;referer=OB4BZ-D4W3U-B7VVO-4PJWW-6TKDJ-WPB77">
+        </iframe>
+        <div class="map-info">
+          <div class="ttl">项目地址</div>
+          <div class="desc">广东省江门市新会区会城江湾路91号<br>紧邻江门高铁站,1小时高铁通达广深港澳核心城市</div>
+        </div>
+      </div>
+
+      <!-- ===== 实景配套 (from folder 8) ===== -->
+      <div class="amenities-section">
+        <div class="amenities-title">实景配套 · 全业态成熟</div>
+        <div class="amenities-sub">LIVE AMENITIES · 已落地营业</div>
+        <div class="amenity-grid">
+          <div class="amenity">
+            <div class="pic" style="background-image: url('images/new/store.jpg');"></div>
+            <div class="info">
+              <span class="live">已营业</span>
+              <div class="ttl">美宜佳便利店</div>
+              <div class="desc">办公用品、生活物资一站式采购</div>
+            </div>
+          </div>
+          <div class="amenity">
+            <div class="pic" style="background-image: url('images/new/cafe.jpg');"></div>
+            <div class="info">
+              <span class="live">已营业</span>
+              <div class="ttl">精品咖啡店</div>
+              <div class="desc">商务洽谈、客户接待专属场景</div>
+            </div>
+          </div>
+          <div class="amenity">
+            <div class="pic" style="background-image: url('images/new/express.jpg');"></div>
+            <div class="info">
+              <span class="live">已营业</span>
+              <div class="ttl">顺丰速运站点</div>
+              <div class="desc">商务样品寄送、物流收发即时办结</div>
+            </div>
+          </div>
+          <div class="amenity">
+            <div class="pic" style="background-image: url('images/new/gym.jpg');"></div>
+            <div class="info">
+              <span class="live">24h</span>
+              <div class="ttl">智能健身房</div>
+              <div class="desc">全天候开放,适配青年企业作息,区域稀缺配套</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 运营保障 (from folder 7) ===== -->
+      <div class="content-card" style="margin: 16px;">
+        <span class="card-tag teal">OPERATION &amp; SERVICE</span>
+        <div class="card-h">运营保障 · <span class="accent">标准化专属运营</span>守护资产价值</div>
+        <div class="card-sub">组建专属专业运营团队,执行全周期托管服务:常态化园区环境养护、公区设施检修、安保秩序管控;定期举办产业沙龙、企业资源对接会,持续激活园区产业氛围;同步协助入驻企业政策申报、工商注册办理。专业运营长效维持园区品质,杜绝老旧园区快速折旧问题,牢牢守住不动产保值底线。</div>
+        <div class="image-block" style="background-image: url('images/new/operation.jpg'); height: 200px;">
+          <div class="label">专属物业 · 标准化运营</div>
+        </div>
+        <ul class="num-list" style="margin-top: 14px;">
+          <li><div class="num">1</div><div class="text"><strong>环境养护:</strong>常态化园区环境养护、公区设施检修</div></li>
+          <li><div class="num">2</div><div class="text"><strong>安保秩序:</strong>园区秩序管控,安全可靠</div></li>
+          <li><div class="num">3</div><div class="text"><strong>资源对接:</strong>定期举办产业沙龙、企业资源对接会</div></li>
+          <li><div class="num">4</div><div class="text"><strong>企业服务:</strong>政策申报、工商注册办理等一站式服务</div></li>
+        </ul>
+      </div>
+
+      <div style="text-align: center; padding: 30px 20px 40px; color: var(--text-3); font-size: 11px; letter-spacing: .5px; background: var(--bg-soft);">
+        <div style="font-size: 14px; font-weight: 700; color: var(--navy-700); margin-bottom: 4px; letter-spacing: -.2px;">深江·科创广场 · SHENJIANG POWER SQUARE</div>
+        <div>&copy; 2026 枢纽新城 · 科创资产标杆</div>
+      </div>
+
+      <div style="height: 40px;"></div>
+    </section>
+
+  </div>
+
+  <!-- ===== Bottom Navigation ===== -->
+  <nav class="bottom-nav">
+    <button class="tab active" data-target="page-home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>首页</span>
+    </button>
+    <button class="tab" data-target="page-project">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      <span>项目</span>
+    </button>
+    <button class="tab" data-target="page-space">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      <span>空间</span>
+    </button>
+    <button class="tab" data-target="page-investment">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <span>投资</span>
+    </button>
+    <button class="tab" data-target="page-contact">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      <span>联系</span>
+    </button>
+  </nav>
+
+  <!-- ===== Lightbox ===== -->
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" id="lightboxClose">&times;</button>
+    <img src="" alt="" id="lightboxImg">
+  </div>
+
+</div>
+
+<script>
+(function() {
+  const pages = document.querySelectorAll('.page');
+  const tabs = document.querySelectorAll('.tab');
+  const splash = document.getElementById('splash');
+  const appHeader = document.getElementById('appHeader');
+  const statusBar = document.getElementById('statusBar');
+
+  setTimeout(() => splash.classList.add('hide'), 1800);
+
+  function switchPage(targetId) {
+    const target = document.getElementById(targetId);
+    if (!target || target.classList.contains('active')) return;
+
+    pages.forEach(p => p.classList.remove('active'));
+    target.classList.add('active');
+
+    target.scrollTop = 0;
+
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.target === targetId));
+
+    // 空间页隐藏 logo 栏
+    if (targetId === 'page-space') {
+      appHeader.classList.add('hide');
+    } else {
+      appHeader.classList.remove('hide');
+    }
+  }
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => switchPage(tab.dataset.target));
+  });
+
+  document.querySelectorAll('[data-goto]').forEach(btn => {
+    btn.addEventListener('click', () => switchPage(btn.dataset.goto));
+  });
+
+  pages.forEach(page => {
+    page.addEventListener('scroll', () => {
+      const top = page.scrollTop;
+      const hero = page.querySelector('.hero, .page-header, .inv-nv-hero, .contact-hero');
+      if (hero) {
+        const heroHeight = hero.offsetHeight - 80;
+        if (top > heroHeight) {
+          appHeader.classList.add('solid');
+          statusBar.classList.add('dark');
+        } else {
+          appHeader.classList.remove('solid');
+          statusBar.classList.remove('dark');
+        }
+      }
+    });
+  });
+
+  const spaceTabs = document.querySelectorAll('.space-tab');
+  const buildingA = document.getElementById('building-A');
+  const buildingB = document.getElementById('building-B');
+  spaceTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      spaceTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const b = tab.dataset.building;
+      buildingA.style.display = b === 'A' ? 'block' : 'none';
+      buildingB.style.display = b === 'B' ? 'block' : 'none';
+    });
+  });
+
+  /* ---- Lightbox for plan images ---- */
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxClose = document.getElementById('lightboxClose');
+
+  document.querySelectorAll('.plan-img').forEach(el => {
+    el.addEventListener('click', () => {
+      const url = el.style.backgroundImage.match(/url\(["']?(.+?)["']?\)/);
+      if (url) {
+        lightboxImg.src = url[1];
+        lightbox.classList.add('open');
+      }
+    });
+  });
+
+  function closeLightbox() { lightbox.classList.remove('open'); }
+  lightboxClose.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+
+  /* ---- Interior scroll dot indicators ---- */
+  document.querySelectorAll('.interior-track').forEach(track => {
+    const dotsId = track.dataset.interior === 'a' ? 'interiorDotsA' : 'interiorDotsB';
+    const dotsContainer = document.getElementById(dotsId);
+    if (!dotsContainer) return;
+    const dots = dotsContainer.querySelectorAll('.interior-dot');
+
+    track.addEventListener('scroll', () => {
+      const scrollLeft = track.scrollLeft;
+      const itemWidth = track.querySelector('.interior-img').offsetWidth + 10; /* gap */
+      const idx = Math.round(scrollLeft / itemWidth);
+      dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+    });
+  });
+
+  /* ---- Register Service Worker for PWA ---- */
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('SW registered:', reg.scope))
+        .catch(err => console.log('SW registration failed:', err));
+    });
+  }
+})();
+</script>
+</body>
+</html>
